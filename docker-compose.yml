@@ -1,0 +1,10 @@
+services:
+  e2e:
+    build: .
+    environment:
+      CI: 'true'
+      BASE_URL: https://playwright.dev
+    volumes:
+      - ./test-results:/workspace/test-results
+      - ./playwright-report:/workspace/playwright-report
+      - ./allure-results:/workspace/allure-results
