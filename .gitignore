@@ -10,3 +10,6 @@ node_modules/
 # Allure
 allure-results/
 allure-report/
+
+# Cucumber HTML report
+reports/cucumber-report.html

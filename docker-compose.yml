@@ -3,8 +3,6 @@ services:
     build: .
     environment:
       CI: 'true'
-      BASE_URL: https://playwright.dev
+      SAUCE_DEMO_URL: https://www.saucedemo.com
     volumes:
-      - ./test-results:/workspace/test-results
-      - ./playwright-report:/workspace/playwright-report
-      - ./allure-results:/workspace/allure-results
+      - ./reports:/workspace/reports

@@ -1,5 +1,4 @@
-# Keep this tag aligned with your @playwright/test version:
-# https://playwright.dev/docs/docker
+# Aligned with @playwright/test — https://playwright.dev/docs/docker
 FROM mcr.microsoft.com/playwright:v1.59.0-noble
 
 WORKDIR /workspace
@@ -10,7 +9,6 @@ RUN npm ci
 COPY . .
 
 ENV CI=true
-ENV BASE_URL=https://playwright.dev
+ENV SAUCE_DEMO_URL=https://www.saucedemo.com
 
-# Browsers are preinstalled in the Playwright image.
 CMD ["npm", "run", "test:ci"]

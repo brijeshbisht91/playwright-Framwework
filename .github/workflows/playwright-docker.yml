@@ -1,4 +1,4 @@
-name: Playwright Docker CI
+name: Cucumber Docker CI
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [main, master]
 
 concurrency:
-  group: playwright-docker-${{ github.workflow }}-${{ github.ref }}
+  group: bdd-docker-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CI: true
-      BASE_URL: https://playwright.dev
+      SAUCE_DEMO_URL: https://www.saucedemo.com
     steps:
       - uses: actions/checkout@v4
 
@@ -29,18 +29,10 @@ jobs:
       - name: Run tests in container
         run: docker compose run --rm e2e
 
-      - name: Upload HTML report
+      - name: Upload Cucumber HTML report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-docker
-          path: playwright-report/
-          retention-days: 7
-
-      - name: Upload Allure results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: allure-results-docker
-          path: allure-results/
+          name: cucumber-report-docker
+          path: reports/cucumber-report.html
           retention-days: 7

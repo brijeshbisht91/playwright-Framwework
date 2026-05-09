@@ -7,27 +7,21 @@
     "node": ">=18"
   },
   "scripts": {
-    "test": "playwright test",
-    "test:headed": "playwright test --headed",
-    "test:debug": "playwright test --debug",
-    "test:ui": "playwright test --ui",
-    "test:ci": "playwright test --reporter=list --reporter=html --reporter=allure-playwright",
+    "test": "cucumber-js",
+    "test:headed": "HEADED=1 cucumber-js",
+    "test:ci": "CI=true cucumber-js",
+    "browsers": "playwright install chromium",
     "docker:build": "docker compose build e2e",
-    "test:docker": "docker compose run --rm e2e",
-    "test:shard": "playwright test --shard=1/2",
-    "report:html": "playwright show-report playwright-report",
-    "report:allure": "allure generate allure-results --clean -o allure-report && allure open allure-report",
-    "report:allure:serve": "allure serve allure-results"
+    "test:docker": "docker compose run --rm e2e"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@cucumber/cucumber": "^12.5.0",
     "@playwright/test": "^1.59.1",
     "@types/node": "^25.5.2",
-    "allure-commandline": "^2.38.1",
-    "allure-playwright": "^3.7.1",
     "dotenv": "^17.4.2"
   }
 }
