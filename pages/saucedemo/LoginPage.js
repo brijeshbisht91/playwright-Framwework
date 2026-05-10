@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test'
 import { SAUCE_DEMO_URL } from '../../config/constants.js';
 
-export class SauceLoginPage {
+export class LoginPage {
 
 
     constructor(page) {

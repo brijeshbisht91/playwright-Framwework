@@ -7,8 +7,8 @@
     "node": ">=18"
   },
   "scripts": {
-    "test": "PLAYWRIGHT_BROWSERS_PATH=0 cucumber-js --config cucumber.json",
-    "test:headed": "PLAYWRIGHT_BROWSERS_PATH=0 HEADED=1 cucumber-js --config cucumber.json",
+    "test": "cucumber-js --config cucumber.json",
+    "test:headed": "cross-env HEADED=1 cucumber-js --config cucumber.json",
     "test:ci": "PLAYWRIGHT_BROWSERS_PATH=0 CI=true cucumber-js --config cucumber.json",
     "browsers": "PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium",
     "pw:install": "PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install",
@@ -28,6 +28,7 @@
     "allure": "^3.7.0",
     "allure-cucumberjs": "^3.3.0",
     "allure-js-commons": "^3.7.2",
+    "cross-env": "^10.1.0",
     "dotenv": "^17.4.2"
   }
 }
