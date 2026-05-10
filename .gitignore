@@ -1,15 +1,27 @@
+# Dependencies
+node_modules/
+
+# Environment (copy from .env.example)
+.env
 
 # Playwright
-node_modules/
 /test-results/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
 
-# Allure
+# Allure (generated)
 allure-results/
 allure-report/
 
-# Cucumber HTML report
+# Cucumber HTML report (generated)
 reports/cucumber-report.html
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*

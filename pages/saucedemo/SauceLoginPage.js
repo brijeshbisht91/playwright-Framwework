@@ -14,10 +14,16 @@ export class SauceLoginPage {
     this.password = page.locator('#password');
     this.loginButton = page.locator('#login-button');
     this.errorBanner = page.locator('[data-test="error"]');
+    this.errorContainer = page.locator('.error-message-container');
   }
 
   async open() {
     await this.page.goto(SAUCE_DEMO_URL, { waitUntil: 'domcontentloaded' });
+  }
+
+  async expectOnLoginPage() {
+    await expect(this.page).toHaveURL(/saucedemo\.com\/?$/);
+    await expect(this.loginButton).toBeVisible();
   }
 
   async login(username, password) {
@@ -28,5 +34,11 @@ export class SauceLoginPage {
 
   async expectErrorContains(text) {
     await expect(this.errorBanner).toContainText(text);
+  }
+
+  async expectErrorBannerBackgroundColor(expectedRgb) {
+    // On SauceDemo, the error message is an <h3> with transparent background;
+    // the visible background is on the container.
+    await expect(this.errorContainer).toHaveCSS('background-color', expectedRgb);
   }
 }

@@ -1,4 +1,5 @@
 # Application under test: https://www.saucedemo.com/
+
 Feature: Sauce Demo e-commerce
   As a shopper
   I want to use Sauce Demo
@@ -29,6 +30,7 @@ Feature: Sauce Demo e-commerce
     And I finish the order
     Then I should see the order confirmation
 
+@SauceDemo
   Scenario Outline: Login smoke for accepted users
     When I log in with username "<user>" and password "secret_sauce"
     Then I should see the inventory page
