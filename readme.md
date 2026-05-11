@@ -28,7 +28,9 @@ npm run test:ci -- --tags "@cart"
 - **npm**  
 - Screen-sharing-capable machine for the interview  
 
-Optional: copy `.env.example` to `.env` if you override URLs or timeouts.
+Optional: copy `.env.example` to `.env` if you override URLs, timeouts, or viewport settings.
+
+You can also use `TEST_ENV` to load a specific env file such as `.env.dev` or `.env.qa`.
 
 ---
 
@@ -52,6 +54,26 @@ npm run pw:install
 | `npm test` | Default run (headless, uses `cucumber.json`) |
 | `npm run test:headed` | Headed browser |
 | `npm run test:ci` | CI-style env flag + same runner |
+| `npm run test:dev` | Run using `.env` + `.env.dev` if present |
+| `npm run test:qa` | Run using `.env` + `.env.qa` if present |
+
+**Override viewport/window size:**
+
+```bash
+VIEWPORT_WIDTH=1920 VIEWPORT_HEIGHT=1080 npm test
+```
+
+**Run against a dev or QA URL:**
+
+- copy `.env.example` to `.env`
+- set `SAUCE_DEMO_URL` to your dev or QA app endpoint
+- optionally create `.env.dev` or `.env.qa`
+
+Example command:
+
+```bash
+TEST_ENV=qa VIEWPORT_WIDTH=1366 VIEWPORT_HEIGHT=768 npm run test:qa
+```
 
 **Filter by tag** (Cucumber):
 

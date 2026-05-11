@@ -15,6 +15,7 @@ export class SauceCartCheckoutPage {
     this.postalCodeInput = page.locator('#postal-code');
     this.continueButton = page.locator('#continue');
     this.finishButton = page.locator('#finish');
+    this.errorBanner = page.locator('[data-test="error"]');
     this.completeHeader = page.locator('.complete-header');
 
     // checkout overview (step two)
@@ -78,6 +79,10 @@ export class SauceCartCheckoutPage {
 
   async finishOrder() {
     await this.finishButton.click();
+  }
+
+  async expectErrorContains(text) {
+    await expect(this.errorBanner).toContainText(text);
   }
 
   async expectOrderComplete() {

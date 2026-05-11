@@ -8,14 +8,17 @@
   },
   "scripts": {
     "test": "PLAYWRIGHT_BROWSERS_PATH=0 cucumber-js --config cucumber.json",
-    "test:headed": "PLAYWRIGHT_BROWSERS_PATH=0 HEADED=1 cucumber-js --config cucumber.json",
+    "test:headed": "HEADED=1 cucumber-js --config cucumber.json",
     "test:ci": "PLAYWRIGHT_BROWSERS_PATH=0 CI=true cucumber-js --config cucumber.json",
+    "test:dev": "TEST_ENV=dev cucumber-js --config cucumber.json",
+    "test:qa": "TEST_ENV=qa PLAYWRIGHT_BROWSERS_PATH=0 cucumber-js --config cucumber.json",
     "browsers": "PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium",
     "pw:install": "PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install",
     "allure:generate": "npx allure generate ./allure-results --clean",
     "allure:open": "npx allure open ./allure-report",
     "docker:build": "docker compose build e2e",
-    "test:docker": "docker compose run --rm e2e"
+    "test:docker": "docker compose run --rm e2e",
+    "test:parallel": "cucumber-js --parallel 4"
   },
   "keywords": [],
   "author": "",

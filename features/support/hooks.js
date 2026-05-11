@@ -2,39 +2,46 @@ import '../../config/load-env.js';
 import {
   After,
   AfterAll,
-  AfterStep,
   Before,
   BeforeAll,
-  BeforeStep,
   setDefaultTimeout,
 } from '@cucumber/cucumber';
 import { chromium, firefox, webkit } from '@playwright/test';
+import { SauceLoginPage } from '../../pages/saucedemo/SauceLoginPage.js';
+import { SauceInventoryPage } from '../../pages/saucedemo/SauceInventoryPage.js';
+import { SauceCartCheckoutPage } from '../../pages/saucedemo/SauceCartCheckoutPage.js';
 
 setDefaultTimeout(60_000);
 
-/** Set `STEP_LOG=0` to disable per-step console output */
-function stepLogsEnabled() {
-  return process.env.STEP_LOG !== '0';
-}
-
-BeforeStep(function ({ pickleStep, pickle }) {
-  if (!stepLogsEnabled()) return;
-  const scenario = pickle?.name ? `[${pickle.name}] ` : '';
-  console.log(`${scenario}▶ ${pickleStep.text}`);
+Before(async function ({ pickle }) {
+  console.log(`▶ Starting scenario: ${pickle.name}`);
 });
 
-AfterStep(function ({ pickleStep, pickle, result }) {
-  if (!stepLogsEnabled()) return;
-  const scenario = pickle?.name ? `[${pickle.name}] ` : '';
+After(async function ({ pickle, result }) {
   const status = result?.status ?? 'UNKNOWN';
-  console.log(`${scenario}← ${status}  ${pickleStep.text}`);
+  console.log(`◀ Finished scenario: ${pickle.name} - ${status}`);
+
+  if (result?.status === 'FAILED') {
+    console.error(`\n❌ Scenario failed: ${pickle.name}`);
+
+    // Print message if available
+    if (result?.message) {
+      console.error('\n===== ERROR MESSAGE =====');
+      console.error(result.message);
+    }
+
+    // Print stack trace if available
+    if (result?.exception?.stack) {
+      console.error('\n===== STACK TRACE =====');
+      console.error(result.exception.stack);
+    }
+  }
 });
 
 /** @type {import('@playwright/test').Browser | null} */
 let browser = null;
 
 BeforeAll(async function () {
-
   const headed =
     process.env.HEADED === '1' ||
     process.env.HEADED === 'true';
@@ -42,19 +49,16 @@ BeforeAll(async function () {
   const browserType = process.env.BROWSER || 'chromium';
 
   switch (browserType) {
-
     case 'firefox':
       browser = await firefox.launch({
         headless: !headed
       });
       break;
-
     case 'webkit':
       browser = await webkit.launch({
         headless: !headed
       });
       break;
-
     default:
       browser = await chromium.launch({
         headless: !headed
@@ -68,11 +72,33 @@ AfterAll(async function () {
 });
 
 Before(async function () {
+  console.log(`Running on process: ${process.pid}`);
+
   if (!browser) {
     throw new Error('Browser not started — BeforeAll failed?');
   }
-  this.context = await browser.newContext();
+
+  const viewportWidth = Number(process.env.VIEWPORT_WIDTH ?? 0);
+  const viewportHeight = Number(process.env.VIEWPORT_HEIGHT ?? 0);
+  const contextOptions = {};
+
+  if (viewportWidth > 0 || viewportHeight > 0) {
+    contextOptions.viewport = {
+      width: viewportWidth > 0 ? viewportWidth : 1280,
+      height: viewportHeight > 0 ? viewportHeight : 720,
+    };
+    console.log(
+      `Using viewport: ${contextOptions.viewport.width}x${contextOptions.viewport.height}`
+    );
+  }
+
+  this.context = await browser.newContext(contextOptions);
   this.page = await this.context.newPage();
+
+  // Initialize page objects
+  this.login = new SauceLoginPage(this.page);
+  this.inventory = new SauceInventoryPage(this.page);
+  this.cart = new SauceCartCheckoutPage(this.page);
 });
 
 After(async function (scenario) {

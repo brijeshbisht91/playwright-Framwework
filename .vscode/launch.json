@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      
+      {
+        "name": "Debug Cucumber Tests",
+        "type": "node",
+        "request": "launch",
+  
+        "runtimeExecutable": "/opt/homebrew/bin/node",
+  
+        "program": "${workspaceFolder}/node_modules/@cucumber/cucumber/bin/cucumber-js",
+  
+        "args": [
+          "--config",
+          "cucumber.json",
+          "--parallel",
+          "1"
+        ],
+  
+        "env": {
+          "HEADED": "1",
+          "PWDEBUG": "1"
+        },
+  
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen"
+      }
+    ]
+  }
