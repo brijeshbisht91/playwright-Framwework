@@ -9,6 +9,7 @@
   "scripts": {
     "test": "PLAYWRIGHT_BROWSERS_PATH=0 cucumber-js --config cucumber.json",
     "test:headed": "HEADED=1 cucumber-js --config cucumber.json",
+    "test:debug": "HEADED=1 SLOW_MO=300 PLAYWRIGHT_BROWSERS_PATH=0 cucumber-js --config cucumber.json",
     "test:ci": "PLAYWRIGHT_BROWSERS_PATH=0 CI=true cucumber-js --config cucumber.json",
     "test:dev": "TEST_ENV=dev cucumber-js --config cucumber.json",
     "test:qa": "TEST_ENV=qa PLAYWRIGHT_BROWSERS_PATH=0 cucumber-js --config cucumber.json",

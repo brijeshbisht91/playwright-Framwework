@@ -159,29 +159,7 @@ Then('I should be on the login page', async function () {
 });
 
 Then('all links on the inventory page should be reachable', async function () {
-  const inventoryUrl = this.page.url();
-
-  const hrefs = await this.page.locator('a[href]').evaluateAll((anchors) =>
-    anchors.map((a) => a.getAttribute('href')).filter(Boolean),
-  );
-
-  const urls = hrefs
-    .filter((href) => !href.startsWith('#'))
-    .filter((href) => !href.startsWith('mailto:'))
-    .filter((href) => !href.startsWith('javascript:'))
-    .map((href) => new URL(href, inventoryUrl))
-    // Keep to same-origin to avoid external network flakiness
-    .filter((u) => u.origin === new URL(inventoryUrl).origin);
-
-  const unique = Array.from(new Set(urls.map((u) => u.toString())));
-  if (unique.length === 0) return;
-
-  for (const url of unique) {
-    const res = await this.page.request.get(url);
-    if (!res.ok()) {
-      throw new Error(`Broken link: ${url} -> ${res.status()} ${res.statusText()}`);
-    }
-  }
+  await this.inventory.expectSameOriginInventoryLinksReachable();
 });
 
 // Special user scenario steps

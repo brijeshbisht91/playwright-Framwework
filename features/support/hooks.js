@@ -48,21 +48,23 @@ BeforeAll(async function () {
 
   const browserType = process.env.BROWSER || 'chromium';
 
+  const slowMo = Number(process.env.SLOW_MO ?? process.env.PW_SLOW_MO ?? 0);
+  /** @type {import('@playwright/test').LaunchOptions} */
+  const launchOptions = { headless: !headed };
+  if (Number.isFinite(slowMo) && slowMo > 0) {
+    launchOptions.slowMo = slowMo;
+    console.log(`Playwright slowMo: ${slowMo}ms (clear SLOW_MO / PW_SLOW_MO to run at full speed)`);
+  }
+
   switch (browserType) {
     case 'firefox':
-      browser = await firefox.launch({
-        headless: !headed
-      });
+      browser = await firefox.launch(launchOptions);
       break;
     case 'webkit':
-      browser = await webkit.launch({
-        headless: !headed
-      });
+      browser = await webkit.launch(launchOptions);
       break;
     default:
-      browser = await chromium.launch({
-        headless: !headed
-      });
+      browser = await chromium.launch(launchOptions);
   }
 });
 

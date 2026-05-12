@@ -8,7 +8,9 @@ export class SauceCartCheckoutPage {
   constructor(page) {
     this.page = page;
     this.cartLink = page.locator('.shopping_cart_link');
-    this.cartItems = page.locator('.cart_item');
+    this.cartLineItems = page.locator('.cart_item');
+    /** Use under each `.cart_item` row (cart + checkout overview). */
+    this.cartLineItemPrice = '.inventory_item_price';
     this.checkoutButton = page.locator('#checkout');
     this.firstNameInput = page.locator('#first-name');
     this.lastNameInput = page.locator('#last-name');
@@ -17,20 +19,15 @@ export class SauceCartCheckoutPage {
     this.finishButton = page.locator('#finish');
     this.errorBanner = page.locator('[data-test="error"]');
     this.completeHeader = page.locator('.complete-header');
-
-    // checkout overview (step two)
-    this.overviewItems = page.locator('.cart_item');
     this.itemTotalLabel = page.locator('.summary_subtotal_label');
     this.taxLabel = page.locator('.summary_tax_label');
     this.totalLabel = page.locator('.summary_total_label');
   }
 
+  // --- Actions ---
+
   async openCart() {
     await this.cartLink.click();
-  }
-
-  async expectOnCartPage() {
-    await expect(this.page).toHaveURL(/cart\.html/);
   }
 
   async startCheckout() {
@@ -57,7 +54,17 @@ export class SauceCartCheckoutPage {
   }
 
   async cartLineItemCount() {
-    return this.cartItems.count();
+    return this.cartLineItems.count();
+  }
+
+  async finishOrder() {
+    await this.finishButton.click();
+  }
+
+  // --- Assertions ---
+
+  async expectOnCartPage() {
+    await expect(this.page).toHaveURL(/cart\.html/);
   }
 
   async expectOnCheckoutStepTwo() {
@@ -65,19 +72,18 @@ export class SauceCartCheckoutPage {
   }
 
   async expectOverviewTotalsCorrect() {
-    // Ensure we're on the overview page.
     await expect(this.page).toHaveURL(/checkout-step-two\.html/);
 
-    const count = await this.overviewItems.count();
+    const count = await this.cartLineItems.count();
     if (count === 0) {
       throw new Error('No items found on checkout overview.');
     }
 
     const prices = [];
     for (let i = 0; i < count; i++) {
-      const priceText = await this.overviewItems
+      const priceText = await this.cartLineItems
         .nth(i)
-        .locator('.inventory_item_price')
+        .locator(this.cartLineItemPrice)
         .textContent();
 
       prices.push(Number.parseFloat(priceText.replace('$', '')));
@@ -85,9 +91,9 @@ export class SauceCartCheckoutPage {
 
     const expectedItemTotal = prices.reduce((a, b) => a + b, 0);
 
-    const itemTotalText = await this.itemTotalLabel.textContent(); // "Item total: $39.98"
-    const taxText = await this.taxLabel.textContent(); // "Tax: $3.20"
-    const totalText = await this.totalLabel.textContent(); // "Total: $43.18"
+    const itemTotalText = await this.itemTotalLabel.textContent();
+    const taxText = await this.taxLabel.textContent();
+    const totalText = await this.totalLabel.textContent();
 
     const itemTotal = Number.parseFloat(itemTotalText.replace(/[^\d.]/g, ''));
     const tax = Number.parseFloat(taxText.replace(/[^\d.]/g, ''));
@@ -95,10 +101,6 @@ export class SauceCartCheckoutPage {
 
     expect(itemTotal).toBeCloseTo(expectedItemTotal, 2);
     expect(total).toBeCloseTo(itemTotal + tax, 2);
-  }
-
-  async finishOrder() {
-    await this.finishButton.click();
   }
 
   async expectErrorContains(text) {

@@ -17,13 +17,10 @@ export class SauceLoginPage {
     this.errorContainer = page.locator('.error-message-container');
   }
 
+  // --- Actions ---
+
   async open() {
     await this.page.goto(SAUCE_DEMO_URL, { waitUntil: 'domcontentloaded' });
-  }
-
-  async expectOnLoginPage() {
-    await expect(this.page).toHaveURL(/saucedemo\.com\/?$/);
-    await expect(this.loginButton).toBeVisible();
   }
 
   async login(username, password) {
@@ -49,6 +46,13 @@ export class SauceLoginPage {
       this.page.waitForURL(/inventory\.html/, { timeout: inventoryNavigationTimeoutMs }),
       this.loginButton.click(),
     ]);
+  }
+
+  // --- Assertions ---
+
+  async expectOnLoginPage() {
+    await expect(this.page).toHaveURL(/saucedemo\.com\/?$/);
+    await expect(this.loginButton).toBeVisible();
   }
 
   async expectErrorContains(text) {
