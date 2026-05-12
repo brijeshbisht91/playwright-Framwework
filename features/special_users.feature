@@ -21,67 +21,46 @@ Feature: Sauce Demo special user scenarios
     But some images may not load correctly
     And some buttons may behave unexpectedly
 
-  @problem_user @ui @cart
-  Scenario: Problem user cart functionality with UI issues
+  @problem_user @ui @detail_glitch
+  Scenario: Problem user list vs detail mismatch when opening product via image
     When I log in with username "problem_user" and password "secret_sauce"
     Then I should see the inventory page
-    When I attempt to add "Sauce Labs Backpack" to the cart
-    Then the cart badge should update correctly despite UI inconsistencies
+    When I open the product detail for "Sauce Labs Backpack" by clicking its product image
+    Then the item detail page should show a different price and image than on the inventory list
 
   @performance_glitch_user @performance @timeout
   Scenario: Performance glitch user slow response handling
-    When I log in with username "performance_glitch_user" and password "secret_sauce"
-    Then I should eventually see the inventory page after delays
+    When I submit performance glitch user credentials with password "secret_sauce" and wait for inventory within 30000 milliseconds
     And page loads should complete within reasonable time limits
 
-  @performance_glitch_user @performance @actions
-  Scenario: Performance glitch user action delays
-    When I log in with username "performance_glitch_user" and password "secret_sauce"
-    Then I should see the inventory page
-    When I add the product "Sauce Labs Backpack" to the cart
-    Then the cart should show badge count 1 after potential delays
-
   @error_user @negative @checkout
-  Scenario: Error user checkout failure simulation
+  Scenario: Error user reaches checkout overview with empty last name
     When I log in with username "error_user" and password "secret_sauce"
     Then I should see the inventory page
     When I add the product "Sauce Labs Backpack" to the cart
     And I open the shopping cart
     And I start checkout
-    And I enter shipping "Test" "User" "12345"
-    Then I should encounter system errors during checkout process
+    And I enter shipping "Test" "" "12345"
+    Then I should be on checkout step two overview
+    And no checkout error banner should be visible
 
   @error_user @negative @api
-  Scenario: Error user API error triggering
+  Scenario: Error user inventory remove triggers failing Backtrace JSON submit
     When I log in with username "error_user" and password "secret_sauce"
     Then I should see the inventory page
-    When I attempt various actions that may trigger API errors
-    Then appropriate error handling should be displayed
+    When I add the product "Sauce Labs Backpack" to the cart
+    When I remove the product "Sauce Labs Backpack" from the cart on the inventory page waiting for failed Backtrace telemetry
+    And the product "Sauce Labs Backpack" should still be in the cart on the inventory page with badge count 1
 
   @visual_user @visual @regression
   Scenario: Visual user UI consistency validation
     When I log in with username "visual_user" and password "secret_sauce"
     Then I should see the inventory page
-    And the UI layout should be consistent
-    And visual elements should render correctly
-    And no unexpected layout shifts should occur
+    And the inventory shopping cart layout should deviate from the golden baseline by at least 80 pixels
 
   @visual_user @visual @responsive
   Scenario: Visual user responsive design check
     When I log in with username "visual_user" and password "secret_sauce"
     Then I should see the inventory page
     When I resize the browser window
-    Then the layout should adapt appropriately without visual issues
-
-  @interview @comprehensive
-  Scenario Outline: Comprehensive special user behavior validation
-    When I log in with username "<username>" and password "secret_sauce"
-    Then I should validate "<expected_behavior>" for "<user_type>"
-
-    Examples:
-      | username                | user_type             | expected_behavior                          |
-      | locked_out_user         | authentication        | login blocked with error message           |
-      | problem_user            | ui_bugs               | inventory accessible but with UI issues     |
-      | performance_glitch_user | performance           | slow responses but functional              |
-      | error_user              | error_handling        | system errors during workflows             |
-      | visual_user             | visual_consistency    | UI rendering and layout validation         |
+    Then the inventory shopping cart layout should deviate from the golden baseline by at least 80 pixels

@@ -156,6 +156,26 @@ export class SauceInventoryPage {
     }
   }
 
+  /**
+   * Clicks Remove on the inventory list row (not the cart page).
+   * @param {string} productName e.g. "Sauce Labs Backpack"
+   */
+  async removeFromCartOnInventoryListing(productName) {
+    const row = this.inventoryItems.filter({ hasText: productName });
+    await row.getByRole('button', { name: 'Remove' }).click();
+  }
+
+  /**
+   * error_user: remove can fail client-side while cart still shows one item.
+   * @param {string} productName
+   * @param {number} expectedBadgeCount
+   */
+  async expectProductStillInCartOnInventory(productName, expectedBadgeCount) {
+    const row = this.inventoryItems.filter({ hasText: productName });
+    await expect(row.getByRole('button', { name: 'Remove' })).toBeVisible();
+    await expect(this.cartBadge).toHaveText(String(expectedBadgeCount));
+  }
+
   async expectCartBadgeCount(count) {
     await expect(this.cartBadge).toHaveText(String(count));
   }
@@ -172,5 +192,44 @@ export class SauceInventoryPage {
   async resetAppState() {
     await this.burgerButton.click();
     await this.resetAppStateLink.click();
+  }
+
+  /**
+   * Opens inventory-item from the list by clicking the row image link (not the title).
+   * @param {string} productName e.g. "Sauce Labs Backpack"
+   * @returns {Promise<{ listPrice: string, listImgSrc: string }>}
+   */
+  async openProductDetailByClickingProductImage(productName) {
+    const row = this.inventoryItems.filter({ hasText: productName });
+    await expect(row).toBeVisible();
+    const listPrice =
+      (await row.locator('[data-test="inventory-item-price"]').textContent())?.trim() ?? '';
+    const listImgSrc =
+      (await row.locator('img.inventory_item_img').getAttribute('src')) ?? '';
+    await row.locator('[data-test$="-img-link"]').click();
+    await expect(this.page).toHaveURL(/inventory-item\.html/);
+    return { listPrice, listImgSrc };
+  }
+
+  /**
+   * On inventory-item.html: assert detail disagrees with the captured list row (problem_user glitch).
+   * @param {{ listPrice: string, listImgSrc: string }} listing
+   */
+  async expectItemDetailMismatchVersusListing(listing) {
+    const detailPrice =
+      (await this.page.locator('[data-test="inventory-item-price"]').textContent())?.trim() ??
+      '';
+    const detailImgSrc =
+      (await this.page.locator('img.inventory_details_img').getAttribute('src')) ?? '';
+
+    expect(
+      detailPrice,
+      `detail price should differ from list price (${listing.listPrice}) for problem_user`,
+    ).not.toBe(listing.listPrice);
+
+    expect(
+      detailImgSrc,
+      'detail image src should differ from list row image for problem_user',
+    ).not.toBe(listing.listImgSrc);
   }
 }

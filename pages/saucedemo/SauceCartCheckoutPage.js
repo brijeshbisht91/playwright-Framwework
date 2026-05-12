@@ -44,6 +44,26 @@ export class SauceCartCheckoutPage {
     await this.continueButton.click();
   }
 
+  /**
+   * @param {string} productName e.g. "Sauce Labs Backpack" → data-test remove-sauce-labs-backpack
+   */
+  removeButtonForProduct(productName) {
+    const slug = productName.toLowerCase().replaceAll(/\s+/g, '-');
+    return this.page.locator(`[data-test="remove-${slug}"]`);
+  }
+
+  async removeProductFromCartByName(productName) {
+    await this.removeButtonForProduct(productName).click();
+  }
+
+  async cartLineItemCount() {
+    return this.cartItems.count();
+  }
+
+  async expectOnCheckoutStepTwo() {
+    await expect(this.page).toHaveURL(/checkout-step-two\.html/);
+  }
+
   async expectOverviewTotalsCorrect() {
     // Ensure we're on the overview page.
     await expect(this.page).toHaveURL(/checkout-step-two\.html/);

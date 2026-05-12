@@ -2,6 +2,8 @@ import { Given, When, Then } from '@cucumber/cucumber';
 import { expect } from '@playwright/test';
 import { SauceLoginPage } from '../../pages/saucedemo/SauceLoginPage.js';
 import { SAUCE_DEMO_URL } from '../../config/constants.js';
+import { assertBacktraceTelemetryFails } from '../support/backtrace-route.js';
+import { assertShoppingCartLayoutDiffersFromGolden } from '../support/visual-layout-golden.js';
 
 Given('I open the Sauce Demo login page', async function () {
   await this.login.open();
@@ -75,6 +77,49 @@ When(
   'I enter shipping {string} {string} {string}',
   async function (firstName, lastName, postalCode) {
     await this.cart.fillShipping(firstName, lastName, postalCode);
+  },
+);
+
+When('I remove the product {string} from the cart', async function (productName) {
+  await this.cart.removeProductFromCartByName(productName);
+});
+
+When('I note the current cart line item count', async function () {
+  this._notedCartLineCount = await this.cart.cartLineItemCount();
+});
+
+Then('the cart line item count should equal the noted count', async function () {
+  const now = await this.cart.cartLineItemCount();
+  expect(now, 'cart line count after action').toBe(this._notedCartLineCount);
+});
+
+Then('the cart should show line items count {int}', async function (expected) {
+  await expect
+    .poll(async () => this.cart.cartLineItemCount(), { timeout: 5_000 })
+    .toBe(expected);
+});
+
+Then('I should be on checkout step two overview', async function () {
+  await this.cart.expectOnCheckoutStepTwo();
+});
+
+Then('no checkout error banner should be visible', async function () {
+  await expect(this.cart.errorBanner).toBeHidden();
+});
+
+When(
+  'I remove the product {string} from the cart on the inventory page waiting for failed Backtrace telemetry',
+  async function (productName) {
+    await assertBacktraceTelemetryFails(this.page, () =>
+      this.inventory.removeFromCartOnInventoryListing(productName),
+    );
+  },
+);
+
+Then(
+  'the product {string} should still be in the cart on the inventory page with badge count {int}',
+  async function (productName, badgeCount) {
+    await this.inventory.expectProductStillInCartOnInventory(productName, badgeCount);
   },
 );
 
@@ -183,6 +228,35 @@ Then('some buttons may behave unexpectedly', async function () {
   await addButtons.first().click();
 });
 
+When(
+  'I open the product detail for {string} by clicking its product image',
+  async function (productName) {
+    this._listingSnapshotForItemDetail =
+      await this.inventory.openProductDetailByClickingProductImage(productName);
+  },
+);
+
+Then(
+  'the item detail page should show a different price and image than on the inventory list',
+  async function () {
+    await this.inventory.expectItemDetailMismatchVersusListing(
+      this._listingSnapshotForItemDetail,
+    );
+  },
+);
+
+When(
+  'I submit performance glitch user credentials with password {string} and wait for inventory within {int} milliseconds',
+  async function (password, timeoutMs) {
+    await this.login.submitAndWaitForInventory(
+      'performance_glitch_user',
+      password,
+      timeoutMs,
+    );
+    await this.inventory.expectLoaded();
+  },
+);
+
 When('I attempt to add {string} to the cart', async function (productName) {
   await this.inventory.addToCartByProductName(productName);
 });
@@ -191,12 +265,6 @@ Then('the cart badge should update correctly despite UI inconsistencies', async 
   // Wait a bit for potential delays
   await this.page.waitForTimeout(1000);
   await this.inventory.expectCartBadgeCount(1);
-});
-
-Then('I should eventually see the inventory page after delays', async function () {
-  // Wait for inventory page with extended timeout for performance_glitch_user
-  await this.page.waitForURL(/inventory\.html/, { timeout: 10000 });
-  await this.inventory.expectLoaded();
 });
 
 Then('page loads should complete within reasonable time limits', async function () {
@@ -210,88 +278,16 @@ Then('the cart should show badge count {int} after potential delays', async func
   await this.inventory.expectCartBadgeCount(count);
 });
 
-Then('I should encounter system errors during checkout process', async function () {
-  // For error_user, checkout may fail - check for error messages
-  const errorVisible = await this.cart.errorBanner.isVisible();
-  if (errorVisible) {
-    const errorText = await this.cart.errorBanner.textContent();
-    console.log(`Checkout error encountered: ${errorText}`);
-  } else {
-    // Even if no error banner, the checkout might have failed in other ways
-    console.log('No explicit error banner, but checkout may have failed for error_user');
-  }
-});
-
-When('I attempt various actions that may trigger API errors', async function () {
-  // Try multiple actions that might trigger errors for error_user
-  try {
-    await this.inventory.addToCartByProductName('Sauce Labs Backpack');
-    await this.inventory.addToCartByProductName('Sauce Labs Bike Light');
-  } catch (error) {
-    console.log(`Action error encountered: ${error.message}`);
-  }
-});
-
-Then('appropriate error handling should be displayed', async function () {
-  // Check for any error messages or failed states
-  const errorSelectors = [
-    '[data-test="error"]',
-    '.error-message-container',
-    '.error'
-  ];
-
-  for (const selector of errorSelectors) {
-    const errorElement = this.page.locator(selector);
-    if (await errorElement.isVisible()) {
-      const errorText = await errorElement.textContent();
-      console.log(`Error handling displayed: ${errorText}`);
-      return;
-    }
-  }
-
-  console.log('No explicit error handling visible, but functionality may be impaired');
-});
-
-Then('the UI layout should be consistent', async function () {
-  // Check that key elements are present and positioned correctly
-  await expect(this.inventory.title).toBeVisible();
-  await expect(this.inventory.inventoryItems.first()).toBeVisible();
-});
-
-Then('visual elements should render correctly', async function () {
-  // Check for presence of images and proper rendering
-  const images = this.page.locator('img');
-  const imageCount = await images.count();
-
-  if (imageCount > 0) {
-    // Check that images have dimensions (basic render check)
-    const firstImage = images.first();
-    const box = await firstImage.boundingBox();
-    expect(box.width).toBeGreaterThan(0);
-    expect(box.height).toBeGreaterThan(0);
-  }
-});
-
-Then('no unexpected layout shifts should occur', async function () {
-  // Basic layout stability check - elements should maintain positions
-  const titleBox = await this.inventory.title.boundingBox();
-  expect(titleBox.y).toBeGreaterThan(0); // Title should be positioned reasonably
-});
-
 When('I resize the browser window', async function () {
-  // Resize to mobile viewport
   await this.page.setViewportSize({ width: 375, height: 667 });
 });
 
-Then('the layout should adapt appropriately without visual issues', async function () {
-  // Check that elements are still visible after resize
-  await expect(this.inventory.title).toBeVisible();
-  await expect(this.inventory.inventoryItems.first()).toBeVisible();
-
-  // Check that content is still accessible
-  const contentVisible = await this.page.locator('.inventory_container').isVisible();
-  expect(contentVisible).toBe(true);
-});
+Then(
+  'the inventory shopping cart layout should deviate from the golden baseline by at least {int} pixels',
+  async function (minPixels) {
+    await assertShoppingCartLayoutDiffersFromGolden(this.page, minPixels);
+  },
+);
 
 Then('I should validate {string} for {string}', async function (expectedBehavior, userType) {
   // Generic validation step for comprehensive scenarios

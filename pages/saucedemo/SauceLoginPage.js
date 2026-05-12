@@ -32,13 +32,30 @@ export class SauceLoginPage {
     await this.loginButton.click();
   }
 
+  /**
+   * Fills credentials, clicks login, and waits for the inventory URL. Uses Promise.all so the
+   * navigation clock starts with the click. A small `inventoryNavigationTimeoutMs` will fail for
+   * `performance_glitch_user` if the app responds slower than that budget (unlike calling
+   * `waitForURL` only after `login()`, when navigation has often already finished).
+   *
+   * @param {string} username
+   * @param {string} password
+   * @param {number} inventoryNavigationTimeoutMs
+   */
+  async submitAndWaitForInventory(username, password, inventoryNavigationTimeoutMs) {
+    await this.username.fill(username);
+    await this.password.fill(password);
+    await Promise.all([
+      this.page.waitForURL(/inventory\.html/, { timeout: inventoryNavigationTimeoutMs }),
+      this.loginButton.click(),
+    ]);
+  }
+
   async expectErrorContains(text) {
     await expect(this.errorBanner).toContainText(text);
   }
 
   async expectErrorBannerBackgroundColor(expectedRgb) {
-    // On SauceDemo, the error message is an <h3> with transparent background;
-    // the visible background is on the container.
     await expect(this.errorContainer).toHaveCSS('background-color', expectedRgb);
   }
 }
